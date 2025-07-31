@@ -7,9 +7,10 @@ const Player = ({ track, onEnded }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.5);
-  const audioCtxRef = useRef(null);        // Зберігаємо AudioContext
-  const sourceRef = useRef(null);          // Зберігаємо SourceNode
-  const analyserRef = useRef(null);        // Зберігаємо AnalyserNode
+
+  const audioCtxRef = useRef(null);
+  const sourceRef = useRef(null);
+  const analyserRef = useRef(null);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -28,61 +29,67 @@ const Player = ({ track, onEnded }) => {
     };
   }, [track, volume, onEnded]);
 
-   useEffect(() => {
-     if (isPlaying) {
-       const playPromise = audioRef.current.play();
-       if (playPromise !== undefined) {
-         playPromise.catch((error) => console.error("Playback error:", error));
-       }
-     } else {
-       audioRef.current.pause();
-     }
-   }, [isPlaying, track]);
-
-  const togglePlay = () => setIsPlaying(!isPlaying);
-
-    useEffect(() => {
-      // Ініціалізація аналізатора лише один раз
-      if (!audioCtxRef.current) {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaElementSource(audioRef.current);
-        const analyser = audioCtx.createAnalyser();
-  
-        source.connect(analyser);
-        analyser.connect(audioCtx.destination);
-  
-        audioCtxRef.current = audioCtx;
-        sourceRef.current = source;
-        analyserRef.current = analyser;
-  
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-  
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-  
-        const draw = () => {
-          requestAnimationFrame(draw);
-          analyser.getByteFrequencyData(dataArray);
-  
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-          const barWidth = (canvas.width / bufferLength) * 2.5;
-          let x = 0;
-  
-          for (let i = 0; i < bufferLength; i++) {
-            const barHeight = dataArray[i];
-            ctx.fillStyle = `rgb(250, ${50 + barHeight / 2}, 100)`;
-            ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
-            x += barWidth + 1;
-          }
-        };
-  
-        draw();
+  useEffect(() => {
+    if (isPlaying) {
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => console.error("Playback error:", error));
       }
-    }, []); // 👈 пустий масив – виконується лише раз
-  
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying, track]);
+
+  const startVisualizer = (analyser) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    analyser.fftSize = 256;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const draw = () => {
+      requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i];
+        ctx.fillStyle = `rgb(250, ${50 + barHeight / 2}, 100)`;
+        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+        x += barWidth + 1;
+      }
+    };
+
+    draw();
+  };
+
+  const togglePlay = () => {
+    if (!audioCtxRef.current) {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createMediaElementSource(audioRef.current);
+      const analyser = audioCtx.createAnalyser();
+
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      audioCtxRef.current = audioCtx;
+      sourceRef.current = source;
+      analyserRef.current = analyser;
+
+      startVisualizer(analyser);
+    }
+
+    if (audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume();
+    }
+
+    setIsPlaying(prev => !prev);
+  };
 
   const formatTime = (sec) => {
     if (isNaN(sec)) return '00:00';
@@ -100,8 +107,7 @@ const Player = ({ track, onEnded }) => {
         <p className="track-title">🎶 {track.title}</p>
       </div>
 
-     <canvas ref={canvasRef} className="visualizer" width={600} height={200}></canvas>
-
+      <canvas ref={canvasRef} className="visualizer" width={600} height={200}></canvas>
 
       <div className="time-info">
         <span>{formatTime(currentTime)}</span>
@@ -131,10 +137,9 @@ const Player = ({ track, onEnded }) => {
       </div>
 
       <div className="controls">
-
-      <button onClick={togglePlay}>
-        {isPlaying ? 'Pause ⏸️' : 'Play ▶️'}
-      </button>
+        <button onClick={togglePlay}>
+          {isPlaying ? 'Pause ⏸️' : 'Play ▶️'}
+        </button>
       </div>
     </div>
   );
