@@ -52,21 +52,48 @@ const Player = ({ track, onEnded }) => {
       requestAnimationFrame(draw);
       analyser.getByteFrequencyData(dataArray);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.001;
 
-      const barWidth = (canvas.width / bufferLength) * 2.5;
+      const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      
+      
+      bgGradient.addColorStop(0.6, `hsl(${(time * 20 + 200) % 360}, 80%, 20%)`);   // фиолетовый
+      bgGradient.addColorStop(1, `hsl(${(time * 20 + 330) % 360}, 85%, 25%)`);     // розово-фиолетовый
+      bgGradient.addColorStop(0, `hsl(${(time * 20 + 300) % 360}, 100%, 10%)`);   // тёмно-синий
+
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 1.6;
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
-        ctx.fillStyle = `rgb(250, ${50 + barHeight / 2}, 100)`;
-        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+        const raw = dataArray[i];
+
+        const scaled = Math.pow(raw / 255, 2); // подавление слабого сигнала сильнее
+        const barHeight = scaled * canvas.height * 0.8; // max 40% высоты холста
+
+        if (barHeight < 5) continue;
+
+        const hue = 260 + ((time * 10 + i * 2) % 40);  
+        const lightness = Math.min(4 + barHeight / 4, 50);
+        ctx.fillStyle = `hsl(${hue}, 100%, ${lightness}%)`;
+
+        // ✨ Мягкое свечение
+        ctx.shadowColor = `hsl(${hue}, 100%, 70%)`;
+        ctx.shadowBlur = 15;
+
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
         x += barWidth + 1;
       }
+
+      // Сбросить свечение для следующего кадра (иначе будет залипание)
+      ctx.shadowBlur = 0;
     };
 
     draw();
   };
+
 
   const togglePlay = () => {
     if (!audioCtxRef.current) {
