@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Player from './components/Player';
 import Controls from './components/Controls';
 import Playlist from './components/Playlist';
+import LoginForm from './components/LoginForm';
 import './style.css';
 
 const tracks = [
@@ -128,6 +129,7 @@ const tracks = [
 ];
 
 function App() {
+  const [user, setUser] = useState(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
   const nextTrack = () =>
@@ -135,6 +137,20 @@ function App() {
 
   const prevTrack = () =>
     setCurrentTrackIndex((currentTrackIndex - 1 + tracks.length) % tracks.length);
+
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+
+  if (!user) {
+    return <LoginForm onLogin={setUser} />;
+  }
+
 
   return (
     <div className="app-layout">
