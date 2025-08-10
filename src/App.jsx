@@ -128,51 +128,65 @@ const tracks = [
   }
 ];
 
+
 function App() {
   const [user, setUser] = useState(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
-  const nextTrack = () =>
-    setCurrentTrackIndex((currentTrackIndex + 1) % tracks.length);
-
-  const prevTrack = () =>
-    setCurrentTrackIndex((currentTrackIndex - 1 + tracks.length) % tracks.length);
-
+  const nextTrack = () => setCurrentTrackIndex(i => (i + 1) % tracks.length);
+  const prevTrack = () => setCurrentTrackIndex(i => (i - 1 + tracks.length) % tracks.length);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const saved = localStorage.getItem('user');
+    if (saved) setUser(JSON.parse(saved));
   }, []);
 
+  if (!user) return <LoginForm onLogin={setUser} />;
 
-  if (!user) {
-    return <LoginForm onLogin={setUser} />;
-  }
+  const logout = () => { localStorage.removeItem('user'); setUser(null); };
 
+  const current = tracks[currentTrackIndex];
 
   return (
-    <div className="app-layout">
-      <div className="playlist-section">
+    <div className="shell">
+      {/* Topbar */}
+      <header className="topbar">
+        <div></div>
         <h1>🎵 My Music Player</h1>
-        <Playlist
-          tracks={tracks}
-          current={currentTrackIndex}
-          onSelect={setCurrentTrackIndex}
-        />
-      </div>
+        <button className="logout-btn" onClick={logout}>Log out</button>
+      </header>
 
-      <div className="player-section">
-        <Player
-          track={tracks[currentTrackIndex]}
-          onEnded={nextTrack}
-        />
-        <Controls
-          onNext={nextTrack}
-          onPrev={prevTrack}
-        />
-      </div>
+      {/* Center grid: list (center) + right panel (art + viz) */}
+      <main className="main">
+        <section className="center-list">
+          <Playlist
+            tracks={tracks}
+            current={currentTrackIndex}
+            onSelect={setCurrentTrackIndex}
+          />
+        </section>
+
+        <aside className="right-pane">
+          <div className="track-info">
+            <img src={current.image} alt={current.title} className="track-image" />
+            <p className="track-title">🎶 {current.title}</p>
+          </div>
+          {/* Візуалізатор + аудіо керуємо цим самим Player знизу — візу тут декоративний.
+              Якщо хочеш, можна винести окремий Preview-візуалізатор; поки що залишимо
+              просто canvas як фон-стаб, або додай свій <canvas> */}
+          <div className="preview-visualizer">
+            <canvas className="visualizer"></canvas>
+          </div>
+        </aside>
+      </main>
+
+      {/* Bottom player */}
+      <footer className="bottom-player">
+        <div className="bottom-inner">
+          <Player track={current} onEnded={nextTrack} />
+          <Controls onNext={nextTrack} onPrev={prevTrack} />
+        </div>
+      </footer>
     </div>
   );
 }

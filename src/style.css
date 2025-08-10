@@ -1,349 +1,409 @@
-/* Базовий фон */
-body {
+/* ====== ГЛОБАЛ ====== */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  /*
-  background: linear-gradient(135deg, #1b1b1b, #2c2c2e, #3a3a3c, #4b4b4d);
-  */
-  background: linear-gradient(135deg, #2e2f2f 0%, #2c2e2d, #c6f8e5 100%);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(300px) saturate(180%);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  overflow: hidden;
-}
-
-/* Карточка плеєра */
-.app {
-  width: 95%;
-  max-width: 480px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(30px) saturate(180%);
-  border-radius: 25px;
-  box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5);
-  text-align: center;
-  padding: 40px 25px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  animation: fadeIn 1.2s ease forwards;
-  transform: scale(0.97);
-
-  display: flex; /* ⬅️ Вирівнюємо контент */
-  flex-direction: column;
-}
-
-/* Заголовок */
-h1 {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 15px;
+  padding: 0;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: #121212;
   color: #fff;
-  background: linear-gradient(90deg, #0ea5e9, #4f46e5, #ec4899);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradientMove 8s linear infinite;
-  background-size: 300% 300%;
+  height: 100%;
 }
 
-/* Текст пісні */
-.player p {
-  font-size: 22px;
-  font-weight: 500;
-  margin-bottom: 20px;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.2px;
+button, input {
+  font-family: inherit;
 }
 
-/* Кнопки */
-button {
-  background: linear-gradient(135deg, #a2f5c8, #f9b8d0);
-  color: #1a1a1a;
-  box-shadow: 0 8px 20px rgba(159, 236, 201, 0.4);
-  font-size: 17px;
-  font-weight: 600;
-  border: none;
-  border-radius: 50px;
-  padding: 14px 28px;
-  margin: 12px 8px;
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ====== GRID СХЕМА ====== */
+.shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* topbar | main | bottom */
+  min-height: 100vh;
+}
+
+/* ====== TOPBAR ====== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  padding: 0 24px;
+  background-color: #000;
+}
+
+.topbar h1 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.logout-btn {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: #fff;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
+  transition: background-color 0.2s ease;
 }
 
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 12px 30px rgba(245, 184, 208, 0.6);
+.logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-button:active {
-  transform: scale(0.96);
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+/* ====== MAIN ====== */
+.main {
+  display: grid;
+  grid-template-columns: minmax(500px, 1fr) 420px;
+  gap: 24px;
+  padding: 24px;
 }
 
-/* Плейлист */
+/* ====== CENTER LIST (плейлист) ====== */
+.center-list {
+  background-color: #181818;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
 .playlist {
   list-style: none;
-  margin-top: 30px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  backdrop-filter: blur(10px) saturate(180%);
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 20px;
-  padding-right: 10px;
-  padding-left: 10px;
-  flex-grow: 1;            /* ⬅️ Розтягується вниз */
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  scrollbar-width: none;      /* Firefox */
-  -ms-overflow-style: none;
-  padding: 10px 0;
-  max-height: calc(100vh - 30%); /* адаптивна висота */
-
+  margin: 0;
+  padding: 0;
 }
-
-.playlist::-webkit-scrollbar {
-  display: none;                 /* Chrome, Safari */
-}
-
 
 .playlist li {
-  padding: 16px 20px;
-  margin: 12px 8px;
-  background: linear-gradient(100deg, #59e8bf, #e178a0);
-  /*background: linear-gradient(100deg, #20c8a9, #e178a0);*/
-  border-radius: 40px;
-  font-weight: 500;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-  color: rgba(255, 255, 255, 0.9);
+  transition: background-color 0.2s ease;
 }
 
-
 .playlist li:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(4px);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .playlist li.active {
-  background: linear-gradient(70deg, #706ae1, #1f1f2e, #121212, #8b4a63);
-  /*background: linear-gradient(70deg, #706ae1, #46a5a5, #9FE2BF, #ebe27c);*/
-  font-weight: 700;
-  color: white;
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
-  transform: scale(1.03);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Анімація */
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
+.playlist .thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
 }
 
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+.playlist .title {
+  font-size: 14px;
+  font-weight: 500;
 }
 
-h1 {
-  background-size: 200% 200%;
+/* ====== RIGHT PANE (обкладинка + візуалізатор) ====== */
+.right-pane {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 16px;
 }
 
-audio {
-  display: none;
+.track-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #181818;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.track-image {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.track-title {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.preview-visualizer {
+  background-color: #181818;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-visualizer .visualizer {
+  width: 100%;
+  height: 200px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #535353, #181818);
+}
+
+/* ====== BOTTOM PLAYER ====== */
+.bottom-player {
+  background-color: #181818;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 24px;
+}
+
+.bottom-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Player component styling */
+.player {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.player .track-info {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  padding: 0;
+}
+
+.player .track-image {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 0;
+}
+
+.player .track-title {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.player .visualizer {
+  display: none; /* у нижньому плеєрі не показуємо */
 }
 
 .time-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 18px;
-  color: #b2f5ea;
-  margin-bottom: 10px;
+  gap: 8px;
+  font-size: 12px;
+  margin: 4px 0;
 }
 
 .time-info input[type="range"] {
   flex: 1;
-  margin: 0 10px;
-  accent-color: #94f0d0;
-  background: transparent;
+  -webkit-appearance: none;
   height: 4px;
+  background: #535353;
+  border-radius: 2px;
 }
 
 .volume-control {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 4px;
 }
 
-.volume-control input[type="range"] {
-  width: 120px;
-  accent-color: #f9b8d0;
-}
-
-/* Головний контейнер */
-.container {
+.controls {
   display: flex;
-  flex-direction: row;
-  gap: 40px;
-  padding: 30px;
-  max-width: 1400px;
-  width: 100%;
-  justify-content: center;
-  align-items: flex-start;
-  flex-wrap: wrap;
+  gap: 8px;
 }
 
-/* Блок плеєра */
-.player-section {
-  flex: 1;
-  min-width: 340px;
-  position: absolute;
-  bottom: 30px;
-  right: 30px;
-  max-width: 500px;
-  max-height: 800px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(30px) saturate(180%);
-  animation: fadeIn 1.2s ease forwards;
+.controls button {
+  background-color: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
 }
 
-/* Блок плейлиста */
-.playlist-section {
-  flex: 1;
-  min-width: 360px;
-  max-width: 500px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px) saturate(180%);
-  animation: fadeIn 1.2s ease forwards;
-  bottom: 30px;
-  right: 30px;
-  position: absolute;
-  top: 16px;             /* было 8px */
-  left: 16px;
-  bottom: 16px;          /* отступ снизу */
-  height: auto;
-  max-height: calc(100vh - 40px); /* отступы сверху и снизу */
+.controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.center-list::-webkit-scrollbar {
+  width: 12px;
+}
+
+.center-list::-webkit-scrollbar-thumb {
+  background-color: #535353;
+  border-radius: 6px;
+}
+
+
+@media (max-width: 1100px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+  .right-pane {
+    order: -1;
+  }
+}
+
+/* ====== ПЛЕЙЛИСТ У ВИГЛЯДІ ТАБЛИЦІ (як Spotify) ====== */
+.center-list {
+  background-color: #181818;
+  border-radius: 8px;
+  padding: 0;                 /* шапка сама має свої відступи */
+  overflow: hidden;           /* щоб закруглення працювало */
+}
+
+/* Обгортка, щоб зробити sticky header */
+.list-wrap {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: calc(100vh - 64px - 24px - 120px); /* topbar + відступи - місце під низ плеєра */
+  min-height: 420px;
+}
+
+/* Sticky header з колонками */
+.list-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #181818;
+  display: grid;
+  grid-template-columns: 56px 1.8fr 1.2fr 1fr 72px; /* № | Назва | Альбом | Дата | Час */
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #b3b3b3;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.playlist.table {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   overflow-y: auto;
 }
 
-.player-section,
-.playlist-section {
-  padding: 20px;                      /* Было 30px */
-  border-radius: 20px;                /* Было 25px */
-  transform: scale(0.94);             /* Было 0.97 */
-  box-shadow: 0 20px 30px rgba(0,0,0,0.25); /* Было 0 25px 40px */
-}
-
-
-/* Для мобільних — вертикально */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-    align-items: center;
-  }
-}
-/* Головний layout */
-.container {
-  position: top-left;
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  flow: hidden;
-}
-
-/* Колонка з плеєром */
-.player-section {
-  width: 700px;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px);
-  border-right: 2px solid rgba(255, 255, 255, 0.1);
-  padding: 30px 20px;
-  box-shadow: 10px 0 25px rgba(0,0,0,0.3);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+/* Рядок-елемент */
+.playlist.table .row {
+  display: grid;
+  grid-template-columns: 56px 1.8fr 1.2fr 1fr 72px;
   align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 0;
+  transition: background-color .18s ease;
+  cursor: pointer;
 }
 
-/* Колонка з плейлистом */
-.playlist-section {
-  position: absolute;
-  top:8px;
-  left: 16px;
-  height: 100vh;
-  flex: 1;
-  overflow-y: auto; /* скролл для плейлиста */
-  padding: 40px 30px;
-  box-sizing: border-box;
-  flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.playlist.table .row:hover {
+  background-color: rgba(255,255,255,0.06);
 }
-/* все нове за фото пісні і текст */
-.track-info {
-  display: flex;
-  flex-direction: column;
+
+.playlist.table .row.active {
+  background-color: rgba(255,255,255,0.1);
+}
+
+/* Колонки */
+.playlist.table .col {
+  min-width: 0; /* дозволяє еліпсисам працювати */
+}
+
+.playlist.table .col.idx {
+  color: #b3b3b3;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding-right: 8px;
+}
+
+/* Назва з міні-обкладинкою */
+.playlist.table .col.title {
+  display: grid;
+  grid-template-columns: 48px 1fr;
   align-items: center;
+  gap: 12px;
+  min-width: 220px;
 }
 
-.track-image {
-  width: 100%;
-  max-width: 280px;
-  border-radius: 20px;
-  margin-bottom: 10px;
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+.playlist.table .thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 6px 14px rgba(0,0,0,.25);
 }
 
-.track-title {
-  font-size: 20px;
+.playlist.table .meta {
+  min-width: 0;
+}
+
+.playlist.table .name {
+  font-size: 14px;
   font-weight: 600;
-  color: white;
-  margin-bottom: 15px;
-  text-align: center;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.player .controls {
-  display: flex;
-  justify-content: center; /* Центрує по горизонталі */
-  margin-top: 10px;         /* Додає відступ зверху (за потребою) */
+.playlist.table .artist {
+  font-size: 12px;
+  color: #b3b3b3;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Canvas visualizer */
-/*
-.visualizer {
-  width: 100%;
-  height: 150px;
-  border-radius: 12px;
-  background: transparent;
-  box-shadow: transparent;
-  transition: all 0.3s ease-in-out;
-}
-  */
-
-.visualizer {
-  width: 100%;
-  height: 150px;
-  background: linear-gradient(135deg, rgba(94, 252, 224, 0.2), rgba(238, 130, 238, 0.1));
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+.playlist.table .col.album,
+.playlist.table .col.added {
+  color: #ddd;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-input::placeholder {
-  color: rgba(255, 255, 255, 0.574);
-  font-weight: 300;
+.playlist.table .col.dur {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #ddd;
+}
+
+
+.playlist.table::-webkit-scrollbar { width: 12px; }
+.playlist.table::-webkit-scrollbar-thumb { background: #535353; border-radius: 6px; }
+.playlist.table { scrollbar-color: #535353 transparent; scrollbar-width: thin; }
+
+
+@media (max-width: 1280px) {
+  .list-header { grid-template-columns: 56px 1.8fr 1.2fr 72px; }
+  .playlist.table .row { grid-template-columns: 56px 1.8fr 1.2fr 72px; }
+  .list-header .added, .playlist.table .col.added { display: none; }
+}
+
+
+@media (max-width: 1100px) {
+  .list-header { grid-template-columns: 56px 1fr 72px; }
+  .playlist.table .row { grid-template-columns: 56px 1fr 72px; }
+  .list-header .album, .playlist.table .col.album { display: none; }
 }
