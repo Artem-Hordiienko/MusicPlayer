@@ -25,15 +25,25 @@ const Playlist = ({ tracks, current, onSelect }) => {
       <ul className="playlist table">
         {tracks.map((t, idx) => (
           <li
-            key={t.src}
+            key={t.id || t.src || idx}
             className={`row ${idx === current ? 'active' : ''}`}
             onClick={() => onSelect(idx)}
             title={t.title}
+            role="button"
+            aria-selected={idx === current}
           >
             <div className="col idx">{idx + 1}</div>
 
             <div className="col title">
-              <img className="thumb" src={t.image} alt="" />
+              <img
+                className="thumb"
+                src={t.image || '/images/default-cover.png'}
+                alt={t.title || 'cover'}
+                loading="lazy"
+                width={40}
+                height={40}
+                onError={(e) => { e.currentTarget.src = '/images/default-cover.png'; }}
+              />
               <div className="meta">
                 <div className="name">{t.title}</div>
                 <div className="artist">{t.artist || '—'}</div>

@@ -1,6 +1,19 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-const Player = ({ track, onEnded }) => {
+const resolveSrc = (s) => {
+  if (!s) return '';
+  if (s.startsWith('blob:') || s.startsWith('data:') || s.startsWith('http')) return s;
+  return `/music/${s}`;
+};
+
+const Player = ({
+  track,
+  onEnded,
+  onPrev,
+  onNext,
+  variant = 'bar',
+  onAnalyserReady,
+}) => {
   const audioRef = useRef(null);
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
@@ -11,167 +24,234 @@ const Player = ({ track, onEnded }) => {
   const [volume, setVolume] = useState(0.5);
 
   const audioCtxRef = useRef(null);
-  const sourceRef = useRef(null);
   const analyserRef = useRef(null);
 
-  // --- Події аудіо ---
+  const audioSrc = resolveSrc(track?.src);
+
+  // ⬇️ ПРИ ЗМІНІ ДЖЕРЕЛА — навмисно перевантажуємо
   useEffect(() => {
     const audio = audioRef.current;
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const setTotalDuration = () => setDuration(audio.duration || 0);
+    if (!audio || !audioSrc) return;
+
+    // знімаємо подію ended і поставимо знову нижче в іншому ефекті
+    audio.pause();
+    audio.src = audioSrc;     // оновили джерело
+    audio.load();             // форс перезавантаження метаданих
+    setCurrentTime(0);
+    setDuration(0);
+
+    // якщо був Play — продовжуємо грати новий трек
+    if (isPlaying) {
+      const p = audio.play();
+      if (p?.catch) p.catch((e) => console.error('Playback error:', e));
+    }
+  }, [audioSrc]); // важливо залежність саме від сформованого шляху
+
+  // події плеєра
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime || 0);
+    const setTotalDuration = () => setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
 
     audio.volume = volume;
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', setTotalDuration);
-    audio.addEventListener('ended', onEnded);
-
-    // Коли міняємо трек – скинути таймер
-    setCurrentTime(0);
+    if (onEnded) audio.addEventListener('ended', onEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', setTotalDuration);
-      audio.removeEventListener('ended', onEnded);
+      if (onEnded) audio.removeEventListener('ended', onEnded);
     };
-  }, [track, volume, onEnded]);
+  }, [volume, onEnded]);
 
+  // play/pause від стану
   useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
     if (isPlaying) {
-      const p = audioRef.current.play();
-      if (p !== undefined) p.catch((e) => console.error('Playback error:', e));
+      const p = audio.play();
+      if (p?.catch) p.catch((e) => console.error('Playback error:', e));
     } else {
-      audioRef.current.pause();
+      audio.pause();
     }
-  }, [isPlaying, track]);
+  }, [isPlaying]);
 
-  // --- Адаптивний canvas ---
-  const resizeCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const parent = canvas.parentElement;
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
-
-    // стилі для CSS-розмірів
-    canvas.style.width = '100%';
-    // фактичні пікселі під dpr
-    const cssWidth = parent.clientWidth;        // ширина секції
-    const cssHeight = Math.max(140, Math.min(220, Math.round(parent.clientWidth * 0.33))); // розумна висота
-
-    canvas.width = Math.floor(cssWidth * dpr);
-    canvas.height = Math.floor(cssHeight * dpr);
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);     // нормалізуємо систему координат
-  };
-
-  useEffect(() => {
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    return () => window.removeEventListener('resize', resizeCanvas);
-  }, []);
-
-  // --- Візуалізатор ---
-  const startVisualizer = (analyser) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = 0.85;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    const draw = () => {
-      rafRef.current = requestAnimationFrame(draw);
-      analyser.getByteFrequencyData(dataArray);
-
-      const { width, height } = canvas;
-      // Ми малюємо в «css»-координатах, тому переводимо
-      const cssW = width / (window.devicePixelRatio || 1);
-      const cssH = height / (window.devicePixelRatio || 1);
-
-      const time = Date.now() * 0.001;
-
-      // фон з градієнтом
-      const bg = ctx.createLinearGradient(0, 0, cssW, cssH);
-      bg.addColorStop(0.6, `hsl(${(time * 20 + 200) % 360}, 80%, 20%)`);
-      bg.addColorStop(1.0, `hsl(${(time * 20 + 330) % 360}, 85%, 25%)`);
-      bg.addColorStop(0.0, `hsl(${(time * 20 + 300) % 360}, 100%, 10%)`);
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, cssW, cssH);
-
-      const barWidth = (cssW / bufferLength) * 1.6;
-      let x = 0;
-
-      for (let i = 0; i < bufferLength; i++) {
-        const raw = dataArray[i];
-        const scaled = Math.pow(raw / 255, 2);
-        const barHeight = scaled * cssH * 0.8;
-        if (barHeight < 4) { x += barWidth + 1; continue; }
-
-        const hue = 260 + ((time * 10 + i * 2) % 40);
-        const lightness = Math.min(4 + barHeight / 4, 50);
-        ctx.fillStyle = `hsl(${hue}, 100%, ${lightness}%)`;
-        ctx.shadowColor = `hsl(${hue}, 100%, 70%)`;
-        ctx.shadowBlur = 12;
-
-        ctx.fillRect(x, cssH - barHeight, barWidth, barHeight);
-        x += barWidth + 1;
-      }
-      ctx.shadowBlur = 0;
-    };
-
-    // старт і зачистка при анмаунті/зміні
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    draw();
-  };
-
-  // --- Play/Pause + ініц. AudioContext лише після взаємодії ---
-  const togglePlay = () => {
+  // ініт аудіографа
+  const ensureAudioGraph = () => {
     if (!audioCtxRef.current) {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.createMediaElementSource(audioRef.current);
-      const analyser = audioCtx.createAnalyser();
-
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new Ctx();
+      const source = ctx.createMediaElementSource(audioRef.current);
+      const analyser = ctx.createAnalyser();
       source.connect(analyser);
-      analyser.connect(audioCtx.destination);
-
-      audioCtxRef.current = audioCtx;
-      sourceRef.current = source;
+      analyser.connect(ctx.destination);
+      audioCtxRef.current = ctx;
       analyserRef.current = analyser;
-
-      resizeCanvas();           // на випадок, якщо ще не розміряли
-      startVisualizer(analyser);
+      onAnalyserReady && onAnalyserReady(analyser);
     }
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-    setIsPlaying((p) => !p);
+    if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume();
   };
 
-  // прибираємо анімацію при демонтажі
-  useEffect(() => {
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
+  const togglePlay = () => {
+    ensureAudioGraph();
+    setIsPlaying(p => !p);
+  };
+
+  const handleSeek = (v) => {
+    const val = parseFloat(v) || 0;
+    const audio = audioRef.current;
+    audio.currentTime = val;
+    setCurrentTime(val);
+  };
 
   const formatTime = (sec) => {
-    if (isNaN(sec)) return '00:00';
+    if (!Number.isFinite(sec)) return '0:00';
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
+  // картковий візуалізатор (якщо використовуєш)
+  useEffect(() => {
+    if (variant !== 'card') return;
+    if (!canvasRef.current || !analyserRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+    const resize = () => {
+      const cssW = canvas.clientWidth || 600;
+      const cssH = canvas.clientHeight || 180;
+      canvas.width = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const analyser = analyserRef.current;
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.85;
+    const N = analyser.frequencyBinCount;
+    const data = new Uint8Array(N);
+
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(data);
+
+      const cssW = canvas.width / dpr;
+      const cssH = canvas.height / dpr;
+
+      const t = Date.now() * 0.001;
+      const bg = ctx.createLinearGradient(0, 0, cssW, cssH);
+      bg.addColorStop(0.6, `hsl(${(t * 20 + 200) % 360}, 80%, 20%)`);
+      bg.addColorStop(1.0, `hsl(${(t * 20 + 330) % 360}, 85%, 25%)`);
+      bg.addColorStop(0.0, `hsl(${(t * 20 + 300) % 360}, 100%, 10%)`);
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, cssW, cssH);
+
+      const barW = (cssW / N) * 1.6;
+      let x = 0;
+      for (let i = 0; i < N; i++) {
+        const v = data[i];
+        const scaled = Math.pow(v / 255, 2);
+        const h = scaled * cssH * 0.8;
+        if (h < 3) { x += barW + 1; continue; }
+        const hue = 260 + ((t * 10 + i * 2) % 40);
+        const light = Math.min(4 + h / 4, 50);
+        ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
+        ctx.shadowColor = `hsl(${hue}, 100%, 70%)`;
+        ctx.shadowBlur = 12;
+        ctx.fillRect(x, cssH - h, barW, h);
+        x += barW + 1;
+      }
+      ctx.shadowBlur = 0;
+    };
+
+    draw();
+    return () => {
+      window.removeEventListener('resize', resize);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [variant]);
+
+  // ===== MARKUP =====
+  const AudioTag = (
+    <audio ref={audioRef} src={audioSrc} preload="metadata" />
+  );
+
+  if (variant === 'bar') {
+    return (
+      <div className="npbar">
+        {AudioTag}
+
+        <div className="np-left">
+          <img className="np-cover" src={track.image} alt={track.title} />
+          <div className="np-meta">
+            <div className="np-title">{track.title}</div>
+            <div className="np-sub">{track.artist || '—'}</div>
+          </div>
+       
+        </div>
+
+        <div className="np-center">
+          <div className="np-controls">
+            <button className="np-ghost" title="Shuffle">🔀</button>
+            <button className="np-ghost" onClick={onPrev} title="Prev">⏮</button>
+            <button className="np-play" onClick={togglePlay} title={isPlaying ? 'Pause' : 'Play'}>
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+            <button className="np-ghost" onClick={onNext} title="Next">⏭</button>
+            <button className="np-ghost" title="Repeat">🔁</button>
+          </div>
+
+          <div className="np-progress">
+            <span className="np-time">{formatTime(currentTime)}</span>
+            <input
+              type="range"
+              min="0"
+              max={Number.isFinite(duration) ? duration : 0}
+              value={currentTime}
+              onChange={(e) => handleSeek(e.target.value)}
+            />
+            <span className="np-time">{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        <div className="np-right">
+          <button className="np-ghost" title="Queue">≡</button>
+          <button className="np-ghost" title="Devices">🖥️</button>
+          <div className="np-volume">
+            <span>🔊</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value) || 0)}
+            />
+          </div>
+          <button className="np-ghost" title="Full screen">⤢</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="player">
-      <audio ref={audioRef} src={`/music/${track.src}`} preload="metadata" />
+      {AudioTag}
 
       <div className="track-info">
         <img src={track.image} alt={track.title} className="track-image" />
         <p className="track-title">🎶 {track.title}</p>
       </div>
 
-      {/* canvas без жорсткої ширини — керує css + resize */}
-      <canvas ref={canvasRef} className="visualizer"></canvas>
+      <canvas ref={canvasRef} className="visualizer" />
 
       <div className="time-info">
         <span>{formatTime(currentTime)}</span>
@@ -180,11 +260,7 @@ const Player = ({ track, onEnded }) => {
           min="0"
           max={Number.isFinite(duration) ? duration : 0}
           value={currentTime}
-          onChange={(e) => {
-            const v = parseFloat(e.target.value) || 0;
-            audioRef.current.currentTime = v;
-            setCurrentTime(v);
-          }}
+          onChange={(e) => handleSeek(e.target.value)}
         />
         <span>{formatTime(duration)}</span>
       </div>
