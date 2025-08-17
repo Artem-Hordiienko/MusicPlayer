@@ -36,6 +36,17 @@ const LoginForm = ({ onLogin }) => {
   };
 
   return (
+
+<div
+      style={{
+        display: "flex",
+        justifyContent: "center", // центр по горизонтали
+        alignItems: "center", // центр по вертикали
+        minHeight: "100vh", // контейнер на весь экран
+        background: "#111", // фон (по желанию)
+      }}
+    >
+    
     <form
       onSubmit={handleSubmit}
       className="login-form"
@@ -126,8 +137,10 @@ const LoginForm = ({ onLogin }) => {
         </button>
       </p>
     </form>
+  </div>
   );
 };
+
 
 const inputStyle = {
   width: '90%',
