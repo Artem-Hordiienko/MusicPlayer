@@ -25,13 +25,12 @@ const Playlist = ({ tracks, current, onSelect }) => {
       <ul className="playlist table">
         {tracks.map((t, idx) => (
           <li
-            key={t.id || t.src || idx}
-            className={`row ${idx === current ? 'active' : ''}`}
-            onClick={() => onSelect(idx)}
-            title={t.title}
-            role="button"
-            aria-selected={idx === current}
-          >
+  key={`${t.id ?? ''}__${t.src ?? ''}__${idx}`}
+  className={`row ${idx === current ? 'active' : ''}`}
+  onClick={() => onSelect(idx)}
+  title={t.title}
+>
+
             <div className="col idx">{idx + 1}</div>
 
             <div className="col title">

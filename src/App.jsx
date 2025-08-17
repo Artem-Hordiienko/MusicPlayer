@@ -40,6 +40,7 @@ function App() {
 
   // бібліотека треків (статичні + додані через dnd)
   const [tracks, setTracks] = useState(staticTracks);
+const loadedRef = useRef(false);
 
   // поточний трек
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -56,18 +57,38 @@ function App() {
   }, []);
 
   // підвантажити треки з IndexedDB і додати до статичних
-  useEffect(() => {
-    (async () => {
-      const dbTracks = await loadAllTracks(); // з blob URL’ами
-      setTracks(prev => [...prev, ...dbTracks]);
-    })();
-  }, []);
+useEffect(() => {
+  if (loadedRef.current) return;     // захист від подвійного виклику в dev
+  loadedRef.current = true;
+
+  (async () => {
+    const dbTracks = await loadAllTracks();
+    setTracks(mergeUnique(staticTracks, dbTracks)); // без конкатенації prev
+  })();
+}, []);
 
   const addFiles = async (files) => {
     const added = await addFilesToLibrary(files);
     setTracks(prev => [...prev, ...added]);
     if (tracks.length === 0 && added.length > 0) setCurrentTrackIndex(0);
   };
+
+
+  // допоміжна: як ми ідентифікуємо трек
+  const keyOf = (t) =>
+  String(t?.id || t?.fp || t?.src || t?.title || '').toLowerCase();
+
+  const mergeUnique = (...arrays) => {
+  const map = new Map();
+  arrays.flat().forEach((t) => {
+    if (!t) return;
+    const k = keyOf(t);
+    if (!map.has(k)) map.set(k, t);
+  });
+  return Array.from(map.values());
+};
+
+
 
   const nextTrack = () => setCurrentTrackIndex(i => (tracks.length ? (i + 1) % tracks.length : 0));
   const prevTrack = () => setCurrentTrackIndex(i => (tracks.length ? (i - 1 + tracks.length) % tracks.length : 0));
