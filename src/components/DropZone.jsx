@@ -40,7 +40,7 @@ export default function DropZone({ onFiles }) {
       <input id="filePick" type="file" accept="audio/*" multiple hidden onChange={onPick} />
       <div className="dz-inner">
         <div className="dz-icon">⬇️</div>
-        <div className="dz-text">Перетягни MP3/M4A сюди або натисни, щоб вибрати</div>
+        <div className="dz-text">Drag MP3/M4A here or click to select</div>
       </div>
     </div>
   );

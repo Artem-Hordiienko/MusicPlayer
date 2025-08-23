@@ -16,10 +16,10 @@ const Playlist = ({ tracks, current, onSelect }) => {
       {/* Заголовок-стрічка (sticky) */}
       <div className="list-header">
         <div className="col idx">#</div>
-        <div className="col title">Назва</div>
-        <div className="col album">Альбом</div>
-        <div className="col added">Дата додано</div>
-        <div className="col dur">Час</div>
+        <div className="col title">Name</div>
+        <div className="col album">Album</div>
+        <div className="col added">Date of add</div>
+        <div className="col dur">Duration</div>
       </div>
 
       <ul className="playlist table">
