@@ -113,6 +113,7 @@ a {
 /* ====== RIGHT PANE (обкладинка + візуалізатор) ====== */
 .right-pane {
   display: grid;
+  flex-direction: column;
   grid-template-rows: auto auto;
   gap: 16px;
 }
@@ -128,8 +129,10 @@ a {
 
 .track-image {
   width: 100%;
-  max-width: 320px;
-  border-radius: 8px;
+  max-width: 240px;   /* было 320px */
+  max-height: 240px;  /* ограничение по высоте */
+  object-fit: cover;
+  border-radius: 6px;
   margin-bottom: 12px;
 }
 
@@ -157,9 +160,15 @@ a {
 
 
 .bottom-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
   background-color: #181818;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 8px 24px;
+  z-index: 1000; /* поверх всего */
 }
 
 .bottom-inner {
@@ -258,9 +267,37 @@ a {
     grid-template-columns: 1fr;
   }
   .right-pane {
-    order: -1;
+  display: grid;
+  grid-template-rows: 1fr 1fr; /* половина/половина */
+  gap: 16px;
+  order: -1;
+}
+.track-info {
+  overflow: hidden; /* чтобы картинка не вылазила */
+}
+  .track-image {
+    max-width: 180px;
+    max-height: 180px;
+  }
+  .right-pane {
+  display: grid;
+  grid-template-rows: 1fr 1fr; /* половина/половина */
+  gap: 16px;
+}
+.track-info {
+  overflow: hidden; /* чтобы картинка не вылазила */
+}
+
+}
+
+@media (min-width: 1400px) {
+  .track-image {
+    max-width: 220px;
+    max-height: 220px;
+    margin-bottom: 4px;
   }
 }
+
 
 /* ====== ПЛЕЙЛИСТ У ВИГЛЯДІ ТАБЛИЦІ (як Spotify) ====== */
 .center-list {
