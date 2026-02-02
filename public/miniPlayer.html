@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="mini.css">
+</head>
+
+<body>
+    <!-- Background Layer (Blurred) -->
+    <div class="bg-layer">
+        <img id="bgCover" src="" alt="" />
+        <div class="bg-overlay"></div>
+    </div>
+
+    <!-- Content Layer -->
+    <div class="card-content">
+        <div class="art-container">
+            <img id="fgCover" src="" alt="Album Art" />
+        </div>
+
+        <div class="info-container">
+            <div class="title-scroller">
+                <div class="title" id="title">Waiting...</div>
+            </div>
+            <div class="artist" id="artist">--</div>
+        </div>
+
+        <div class="controls-container">
+            <button id="prevBtn" title="Previous">
+                <img src="icons/skip-previous.svg" alt="Prev">
+            </button>
+            <button id="playPauseBtn" class="play-main" title="Play/Pause">
+                <img id="playIcon" src="icons/play.svg" alt="Play">
+            </button>
+            <button id="nextBtn" title="Next">
+                <img src="icons/skip-next.svg" alt="Next">
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Init handshake
+        if (window.opener) {
+            window.opener.postMessage('ready', '*');
+        }
+
+        window.addEventListener('message', (e) => {
+            const { track, isPlaying } = e.data;
+            if (track) {
+                const bgImg = document.getElementById('bgCover');
+                const fgImg = document.getElementById('fgCover');
+
+                if (track.image && track.image !== fgImg.src) {
+                    bgImg.src = track.image;
+                    fgImg.src = track.image;
+                }
+
+                document.getElementById('title').textContent = track.title || 'Unknown Title';
+                document.getElementById('artist').textContent = track.artist || 'Unknown Artist';
+            }
+
+            const playIcon = document.getElementById('playIcon');
+            // If playing, show pause icon
+            playIcon.src = isPlaying ? 'icons/pause.svg' : 'icons/play.svg';
+        });
+
+        const send = (action) => {
+            if (window.opener) window.opener.postMessage({ action }, '*');
+        };
+
+        document.getElementById('playPauseBtn').onclick = () => send('togglePlay');
+        document.getElementById('nextBtn').onclick = () => send('next');
+        document.getElementById('prevBtn').onclick = () => send('prev');
+    </script>
+</body>
+
+</html>

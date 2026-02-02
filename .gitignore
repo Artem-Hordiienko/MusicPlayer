@@ -1,0 +1,34 @@
+# Ігнорувати файли ОС та IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# Логи та додаткові файли
+*.log
+*.tmp
+*.bak
+*.pid
+
+# Папки залежностей
+node_modules/
+vendor/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.o
+
+# Секретні файли (токени, паролі)
+.env
+*.key
+*.pem
+*.cert
+config.json
+secrets.*

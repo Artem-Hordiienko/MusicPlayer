@@ -1,0 +1,137 @@
+/* Responsive enhancements layered over style.css */
+
+/* Larger touch target for sliders */
+.np-progress input[type="range"]::-webkit-slider-thumb,
+.np-volume input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.3);
+}
+.np-progress input[type="range"]::-moz-range-thumb,
+.np-volume input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --bar-h: 72px;
+    --top-h: 56px;
+  }
+
+  /* Shrink sizes a bit on tablets/phones */
+  .np-cover { width: 48px; height: 48px; }
+  .np-play { width: 38px; height: 38px; font-size: 16px; }
+  .topbar { padding: 0 12px; }
+  .topbar h1 { font-size: 16px; }
+
+  /* Collapse playlist columns: hide Added date on <= 768px */
+  .list-header { grid-template-columns: 40px 1fr 160px 70px; }
+  ul.playlist.table li.row { grid-template-columns: 40px 1fr 160px 70px; }
+  .col.added { display: none; }
+}
+
+/* Narrow phones: further simplify layout */
+@media (max-width: 600px) {
+  /* Floating rounded mini-player card */
+  .npbar {
+    left: 10px;
+    right: 10px;
+    bottom: 12px;
+    border-radius: 16px;
+    background: #2a2a2a;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    border-top: 0;
+    height: auto; /* allow it to wrap on very small screens */
+    z-index: 1000;
+  }
+
+  /* Respect safe areas and keep colors as in base theme */
+  .topbar { padding-top: env(safe-area-inset-top, 0px); }
+  .bottom-player { height: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px)); }
+  .main { height: calc(100vh - var(--top-h) - var(--bar-h) - env(safe-area-inset-bottom, 0px)); }
+
+  /* Hide album column; keep idx, title, duration */
+  .list-header { grid-template-columns: 32px 1fr 60px; }
+  ul.playlist.table li.row { grid-template-columns: 32px 1fr 60px; }
+  .col.album { display: none; }
+
+  .np-progress { grid-template-columns: 40px 1fr 40px; }
+  .np-time { font-size: 11px; }
+
+  .np-right { gap: 8px; }
+  .np-volume { grid-template-columns: 16px 90px; }
+
+  /* Round cover corners and add small eq overlay */
+  .np-cover { border-radius: 8px; position: relative; }
+  .np-cover::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    bottom: -4px;
+    width: 18px;
+    height: 12px;
+    background:
+      linear-gradient(#1ed760,#1ed760) 0 100%/2px 30% no-repeat,
+      linear-gradient(#1ed760,#1ed760) 50% 100%/2px 60% no-repeat,
+      linear-gradient(#1ed760,#1ed760) 100% 100%/2px 45% no-repeat;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,.6));
+    animation: eqpulse 1.1s infinite ease-in-out;
+  }
+}
+
+@media (max-width: 480px) {
+  /* On very small screens, show only idx + title */
+  .list-header { grid-template-columns: 28px 1fr; }
+  ul.playlist.table li.row { grid-template-columns: 28px 1fr; }
+  .col.dur { display: none; }
+
+  /* Tighten player bar */
+  .np-cover { width: 42px; height: 42px; }
+  .np-ghost { padding: 4px; }
+  .np-center { gap: 4px; }
+  .np-progress { grid-template-columns: 1fr; }
+  .np-time { display: none; }
+
+  /* Keep only volume icon; hide slider */
+  .np-volume input[type="range"] { display: none; }
+  .np-volume { grid-template-columns: 16px; }
+}
+
+@media (max-width: 360px) {
+  .topbar h1 { font-size: 14px; }
+  .np-play { width: 34px; height: 34px; font-size: 14px; }
+}
+
+/* Playing row indicator (green equalizer) */
+.row.active .name { color: #1ed760; position: relative; padding-right: 18px; }
+.row.active .name::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 10px;
+  background:
+    linear-gradient(#1ed760,#1ed760) 0 100%/2px 30% no-repeat,
+    linear-gradient(#1ed760,#1ed760) 50% 100%/2px 60% no-repeat,
+    linear-gradient(#1ed760,#1ed760) 100% 100%/2px 45% no-repeat;
+  animation: eqpulse 1s infinite ease-in-out;
+}
+
+@keyframes eqpulse {
+  0%   { background-size: 2px 25%, 2px 55%, 2px 35%; }
+  25%  { background-size: 2px 60%, 2px 30%, 2px 70%; }
+  50%  { background-size: 2px 35%, 2px 75%, 2px 40%; }
+  75%  { background-size: 2px 70%, 2px 40%, 2px 60%; }
+  100% { background-size: 2px 25%, 2px 55%, 2px 35%; }
+}
